@@ -2,9 +2,18 @@ package lklpay
 
 import (
 	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"encoding/base64"
+	"fmt"
+	"hash"
+	"sync"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/imroc/req/v3"
+	"github.com/ywanbing/pay/lklpay/common"
 	"github.com/ywanbing/pay/log"
 )
 
@@ -57,6 +66,13 @@ func WhitValid(valid *validator.Validate) Option {
 	}
 }
 
+// WithHash set hash type
+func WithHash(hashType crypto.Hash) Option {
+	return func(client *Client) {
+		client.hashType = hashType
+	}
+}
+
 // Client pay client
 type Client struct {
 	ctx context.Context // 上下文
@@ -66,16 +82,23 @@ type Client struct {
 	isProd bool                // 是否生产环境
 	valid  *validator.Validate // 参数校验
 	cli    *req.Client
+
+	lklPublicKey *rsa.PublicKey  // 拉卡拉公钥
+	privateKey   *rsa.PrivateKey // 自己的私钥
+	hashType     crypto.Hash     // hash 类型
+	hash         hash.Hash       // hash 计算
+	mu           sync.Mutex      // 锁（由于签名需要一个一个的签名，所以需要加锁，既然签名都只能一个，那么我们hash也复用一个）
 }
 
 // New a pay client
 func New(cfg Config, options ...Option) *Client {
 	client := &Client{
-		ctx:    context.Background(),
-		cfg:    cfg,
-		log:    log.DefLogger(),
-		isProd: false,
-		valid:  validator.New(),
+		ctx:      context.Background(),
+		cfg:      cfg,
+		log:      log.DefLogger(),
+		isProd:   false,
+		valid:    validator.New(),
+		hashType: crypto.SHA256,
 	}
 
 	for _, option := range options {
@@ -84,6 +107,7 @@ func New(cfg Config, options ...Option) *Client {
 
 	// 初始化http客户端
 	client.initHttpClient()
+	client.hash = client.hashType.New()
 
 	return client
 }
@@ -99,4 +123,32 @@ func (c *Client) initHttpClient() {
 	cli.SetLogger(c.log)
 	cli.SetCommonContentType("application/json")
 	c.cli = cli
+}
+
+// getRsaSign 获取签名字符串
+func (c *Client) getRsaSign(body string) (sign string, err error) {
+	var (
+		appid    = c.cfg.Appid
+		ts       = time.Now().Unix()
+		nonceStr = common.RandomString(12)
+		serialNo = c.cfg.SerialNo
+	)
+	if appid == "" || nonceStr == "" || serialNo == "" {
+		return "", fmt.Errorf("签名缺少必要的参数")
+	}
+
+	validStr := fmt.Sprintf("%s\n%d\n%s\n%s\n%s\n", appid, ts, nonceStr, serialNo, body)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	defer c.hash.Reset()
+
+	c.hash.Write([]byte(validStr))
+	hashed := c.hash.Sum(nil)
+
+	signature, err := rsa.SignPKCS1v15(rand.Reader, c.privateKey, c.hashType, hashed)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(signature), nil
 }
