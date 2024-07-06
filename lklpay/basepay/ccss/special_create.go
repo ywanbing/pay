@@ -9,8 +9,8 @@ import (
 )
 
 // OrderSpecialCreate 收银台订单创建
-func OrderSpecialCreate[D any, R any](ctx context.Context, cli *req.Client, reqData model.BaseRequest[D]) (resp *R, err error) {
-	resp = new(R)
+func OrderSpecialCreate[D any, R any](ctx context.Context, cli *req.Client, reqData model.BaseRequest[D]) (resp *model.BaseResponse[R], err error) {
+	resp = new(model.BaseResponse[R])
 	bytes, err := json.Marshal(reqData)
 	if err != nil {
 		return nil, err

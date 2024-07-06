@@ -2,7 +2,7 @@ package model
 
 // BaseRequest 基础请求
 type BaseRequest[T any] struct {
-	ReqTime string `json:"req_time" validate:"required"`
+	ReqTime string `json:"req_time" validate:"required"` // 请求时间，格式yyyyMMddHHmmss
 	Version string `json:"version" validate:"required"`
 	ReqData *T     `json:"req_data" validate:"required"`
 }
