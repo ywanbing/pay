@@ -5,9 +5,12 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"hash"
+	"os"
 	"sync"
 	"time"
 
@@ -83,11 +86,11 @@ type Client struct {
 	valid  *validator.Validate // 参数校验
 	cli    *req.Client
 
-	lklPublicKey *rsa.PublicKey  // 拉卡拉公钥
-	privateKey   *rsa.PrivateKey // 自己的私钥
-	hashType     crypto.Hash     // hash 类型
-	hash         hash.Hash       // hash 计算
-	mu           sync.Mutex      // 锁（由于签名需要一个一个的签名，所以需要加锁，既然签名都只能一个，那么我们hash也复用一个）
+	lklCertificate *x509.Certificate // 拉卡拉公钥证书
+	privateKey     *rsa.PrivateKey   // 自己的私钥
+	hashType       crypto.Hash       // hash 类型
+	hash           hash.Hash         // hash 计算
+	mu             sync.Mutex        // 锁（由于签名需要一个一个的签名，所以需要加锁，既然签名都只能一个，那么我们hash也复用一个）
 }
 
 // New a pay client
@@ -105,11 +108,29 @@ func New(cfg Config, options ...Option) *Client {
 		option(client)
 	}
 
-	// 初始化http客户端
-	client.initHttpClient()
-	client.hash = client.hashType.New()
+	// 初始化客户端
+	client.init()
 
 	return client
+}
+
+func (c *Client) init() {
+	c.initHttpClient()
+	c.hash = c.hashType.New()
+
+	// 解析公钥证书
+	lklCertificate, err := c.getLklCertificate()
+	if err != nil {
+		panic(err)
+	}
+	c.lklCertificate = lklCertificate
+
+	// 解析私钥
+	privateKey, err := c.getPrivateKey()
+	if err != nil {
+		panic(err)
+	}
+	c.privateKey = privateKey
 }
 
 func (c *Client) initHttpClient() {
@@ -126,7 +147,7 @@ func (c *Client) initHttpClient() {
 }
 
 // getRsaSign 获取签名字符串
-func (c *Client) getRsaSign(body string) (sign string, err error) {
+func (c *Client) getRsaSign(body []byte) (auth string, err error) {
 	var (
 		appid    = c.cfg.Appid
 		ts       = time.Now().Unix()
@@ -150,5 +171,67 @@ func (c *Client) getRsaSign(body string) (sign string, err error) {
 		return "", err
 	}
 
-	return base64.StdEncoding.EncodeToString(signature), nil
+	sign := base64.StdEncoding.EncodeToString(signature)
+
+	// 拼接签名
+	return fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, appid, serialNo, ts, nonceStr, sign), nil
+}
+
+func (c *Client) VerifySign(appid, serialNo, ts, nonce, body, sign string) error {
+	signature, _ := base64.StdEncoding.DecodeString(sign)
+
+	// 计算签名
+	// 将获取到的appId、证书序列号、时间戳、随机字符串、报文body拼接。拼接报文一共有5行，每一行为一个参数。行尾以\n（换行符，ASCII编码值为0x0A）结束，包括最后一行：
+	// ${Lklapi-appid}\n+${Lklapi-serialNo}\n+${Lklapi-timeStamp}\n+${Lklapi-nonceStr}\n+${body}\n
+
+	// 计算签名
+	validStr := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", appid, ts, nonce, serialNo, body)
+
+	return c.lklCertificate.CheckSignature(x509.SHA256WithRSA, []byte(validStr), signature)
+}
+
+func (c *Client) getLklCertificate() (*x509.Certificate, error) {
+	content := ""
+	if c.cfg.SyncPublicKey != "" {
+		content = c.cfg.SyncPublicKey
+	} else if c.cfg.SyncPubicPath != "" {
+		// 读取证书文件
+		publicBytes, err := os.ReadFile(c.cfg.SyncPubicPath)
+		if err != nil {
+			return nil, err
+		}
+		content = string(publicBytes)
+	} else {
+		return nil, fmt.Errorf("未设置拉卡拉公钥证书")
+	}
+
+	block, _ := pem.Decode([]byte(content))
+	if block == nil {
+		panic("failed to parse certificate PEM")
+	}
+
+	return x509.ParseCertificate(block.Bytes)
+}
+
+func (c *Client) getPrivateKey() (*rsa.PrivateKey, error) {
+	privateKey := ""
+	if c.cfg.SignPrivateKey != "" {
+		privateKey = c.cfg.SignPrivateKey
+	} else if c.cfg.SignPrivatePath == "" {
+		// 读取证书文件
+		privateBytes, err := os.ReadFile(c.cfg.SignPrivatePath)
+		if err != nil {
+			return nil, err
+		}
+		privateKey = string(privateBytes)
+	} else {
+		return nil, fmt.Errorf("未设置签名私钥")
+	}
+
+	block, _ := pem.Decode([]byte(privateKey))
+	pkcs8PrivateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	return pkcs8PrivateKey.(*rsa.PrivateKey), nil
 }

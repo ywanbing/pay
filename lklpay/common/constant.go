@@ -1,5 +1,15 @@
 package common
 
+const (
+	Algorism_SHA256 = "LKLAPI-SHA256withRSA"
+
+	// AuthFormat 签名格式(${Algorism}+空格+appid=“${appid}“,serial_no=“${serialNo}“,timestamp=“${timeStamp}“,nonce_str=“${nonceStr}“,signature=“${signature}“)
+	AuthFormat = `%s appid="%s",serial_no="%s",timestamp="%d",nonce_str="%s",signature="%s"`
+
+	// ReplyOrderNotifySuccess 收银台回调通知成功
+	ReplyOrderNotifySuccess = `{"code":"SUCCESS","message":"执行成功"}`
+)
+
 // 收银台的支付方式
 const (
 	ALIPAY    = "ALIPAY"    // 支付宝

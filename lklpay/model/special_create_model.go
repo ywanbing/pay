@@ -7,7 +7,7 @@ type SpecialCreateReq struct {
 	VposID               string          `json:"vpos_id,omitempty" validate:"omitempty,max=32"`                    // 交易设备标识，可选且长度不超过32
 	ChannelID            string          `json:"channel_id,omitempty" validate:"omitempty,max=32"`                 // 渠道号，可选且长度不超过32
 	TotalAmount          int64           `json:"total_amount" validate:"required,gte=0"`                           // 订单金额，单位：分，JPY和KRW的单位是元，即200日元，填“200"
-	OrderEfficientTime   string          `json:"order_efficient_time" validate:"required,len=14,datetime"`         // 订单有效期，必填且格式yyyyMMddHHmmss
+	OrderEfficientTime   string          `json:"order_efficient_time" validate:"required,len=14"`                  // 订单有效期，必填且格式yyyyMMddHHmmss
 	NotifyURL            string          `json:"notify_url,omitempty" validate:"omitempty,url"`                    // 订单支付成功后商户接收订单通知的地址，可选且需为有效URL
 	SupportCancel        int             `json:"support_cancel" validate:"gte=0,lte=1"`                            // 是否支持撤销，默认0或1
 	SupportRefund        int             `json:"support_refund" validate:"gte=0,lte=1"`                            // 是否支持退款，默认0或1
@@ -19,9 +19,9 @@ type SpecialCreateReq struct {
 	SplitMark            string          `json:"split_mark,omitempty" validate:"omitempty,max=2"`                  // 合单标识，"1":为合单，不填默认是为非合单，可选且长度不超过2
 	SettleType           string          `json:"settle_type,omitempty" validate:"omitempty,max=4"`                 // 结算类型（非合单），可选且长度不超过4
 	OutSplitInfo         []*OutSplitInfo `json:"out_split_info,omitempty" validate:"omitempty,dive"`               // 拆单信息,合单标识为“1”时必传该字段。暂无特定验证规则
-	CounterParam         string          `json:"counter_param,omitempty" validate:"omitempty,json"`                // 收银台参数，暂无特定验证规则
+	CounterParam         string          `json:"counter_param,omitempty" validate:"omitempty,json"`                // 收银台参数，暂无特定验证规则( common.CounterParam
 	CounterRemark        string          `json:"counter_remark,omitempty" validate:"omitempty,max=64"`             // 收银台备注，可选且长度不超过64
-	BusiTypeParam        string          `json:"busi_type_param,omitempty" validate:"omitempty,json"`              // 业务类型控制参数（[]BusiTypeParam 类型），暂无特定验证规则
+	BusiTypeParam        string          `json:"busi_type_param,omitempty" validate:"omitempty,json"`              // 业务类型控制参数（ []model.BusiTypeParam 类型），暂无特定验证规则
 	SgnInfo              []string        `json:"sgn_info,omitempty"`                                               // 签约协议号列表，暂无特定验证规则
 	ProductID            string          `json:"product_id,omitempty" validate:"omitempty,max=6"`                  // 指定产品编号，可选且长度不超过6
 	GoodsMark            string          `json:"goods_mark,omitempty" validate:"omitempty,max=2"`                  // 商品信息标识（1:含商品信息，不填默认不含商品信息），暂无特定验证规则

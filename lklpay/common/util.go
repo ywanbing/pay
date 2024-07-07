@@ -7,7 +7,12 @@ import (
 
 // GetReqTime 获取请求时间
 func GetReqTime() string {
-	return time.Now().Format("20060102150405")
+	return FormatTime(time.Now())
+}
+
+// FormatTime 格式化时间
+func FormatTime(t time.Time) string {
+	return t.Format("20060102150405")
 }
 
 // RandomString 随机生成字符串
