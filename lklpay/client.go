@@ -3,11 +3,9 @@ package lklpay
 import (
 	"context"
 	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"hash"
 	"os"
@@ -151,27 +149,26 @@ func (c *Client) getRsaSign(body []byte) (auth string, err error) {
 	var (
 		appid    = c.cfg.Appid
 		ts       = time.Now().Unix()
-		nonceStr = common.RandomString(12)
+		nonceStr = common.RandomString(32)
 		serialNo = c.cfg.SerialNo
 	)
 	if appid == "" || nonceStr == "" || serialNo == "" {
 		return "", fmt.Errorf("签名缺少必要的参数")
 	}
 
-	validStr := fmt.Sprintf("%s\n%d\n%s\n%s\n%s\n", appid, ts, nonceStr, serialNo, body)
+	validStr := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", appid, serialNo, ts, nonceStr, body)
+	c.log.Debugf("valid: %s", validStr)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	defer c.hash.Reset()
 
-	c.hash.Write([]byte(validStr))
-	hashed := c.hash.Sum(nil)
-
-	signature, err := rsa.SignPKCS1v15(rand.Reader, c.privateKey, c.hashType, hashed)
+	// 计算签名
+	sign, err := common.Sign([]byte(validStr), c.privateKey, c.hashType, c.hash)
 	if err != nil {
 		return "", err
 	}
 
-	sign := base64.StdEncoding.EncodeToString(signature)
+	c.log.Debugf("sign: %s", sign)
 
 	// 拼接签名
 	return fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, appid, serialNo, ts, nonceStr, sign), nil
@@ -205,12 +202,7 @@ func (c *Client) getLklCertificate() (*x509.Certificate, error) {
 		return nil, fmt.Errorf("未设置拉卡拉公钥证书")
 	}
 
-	block, _ := pem.Decode([]byte(content))
-	if block == nil {
-		panic("failed to parse certificate PEM")
-	}
-
-	return x509.ParseCertificate(block.Bytes)
+	return common.ParseCertificate([]byte(content))
 }
 
 func (c *Client) getPrivateKey() (*rsa.PrivateKey, error) {
@@ -228,10 +220,5 @@ func (c *Client) getPrivateKey() (*rsa.PrivateKey, error) {
 		return nil, fmt.Errorf("未设置签名私钥")
 	}
 
-	block, _ := pem.Decode([]byte(privateKey))
-	pkcs8PrivateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	return pkcs8PrivateKey.(*rsa.PrivateKey), nil
+	return common.ParsePrivateKey([]byte(privateKey))
 }

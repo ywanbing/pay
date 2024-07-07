@@ -21,6 +21,8 @@ func doPost[D any, R any](ctx context.Context, c *Client, url string, reqData mo
 		return nil, err
 	}
 
+	c.log.Debugf("auth: %s", auth)
+
 	err = c.cli.Post(url).SetHeader("Authorization", auth).SetBodyBytes(bytes).Do(ctx).Into(resp)
 	return
 }

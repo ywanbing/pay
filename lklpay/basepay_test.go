@@ -2,9 +2,13 @@ package lklpay
 
 import (
 	"context"
+	"crypto"
+	"crypto/sha256"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/imroc/req/v3"
 	"github.com/ywanbing/pay/lklpay/common"
 	"github.com/ywanbing/pay/lklpay/model"
 )
@@ -98,11 +102,13 @@ func TestClient_OrderSpecialCreate(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				reqData: model.SpecialCreateReq{
-					OutOrderNo:         "12345678",
-					MerchantNo:         "822290059430BCY",
-					TotalAmount:        1,
-					OrderEfficientTime: common.FormatTime(time.Now().Add(time.Minute)),
-					OrderInfo:          "测试订单",
+					OutOrderNo:           "234456789",
+					MerchantNo:           "822290059430BCY",
+					TotalAmount:          1,
+					OrderEfficientTime:   common.FormatTime(time.Now().Add(time.Minute * 5)),
+					OrderInfo:            "测试订单",
+					SupportRefund:        1,
+					CloseOrderAutoRefund: "1",
 				},
 			},
 			wantResp: nil,
@@ -120,4 +126,73 @@ func TestClient_OrderSpecialCreate(t *testing.T) {
 			t.Logf("OrderSpecialCreate() gotResp = %v", gotResp)
 		})
 	}
+}
+
+func TestClient_OrderClose(t *testing.T) {
+	type fields struct {
+		cli *Client
+	}
+	type args struct {
+		ctx     context.Context
+		reqData model.OrderCloseReq
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		wantResp *model.SpecialCreateRes
+		wantErr  bool
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				cli: creatClient(),
+			},
+			args: args{
+				ctx: context.Background(),
+				reqData: model.OrderCloseReq{
+					MerchantNo: "822290059430BCY",
+					OutOrderNo: "234456789",
+				},
+			},
+			wantResp: nil,
+			wantErr:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.fields.cli
+			gotResp, err := c.OrderClose(tt.args.ctx, tt.args.reqData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OrderSpecialCreate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("OrderSpecialCreate() gotResp = %v", gotResp)
+		})
+	}
+}
+
+func Test_Java(t *testing.T) {
+	client := creatClient()
+	body := `{"req_time":"20210907150256","version":"3.0","out_org_code":"OP00000003","req_data":{"merchant_no":"822290070111135","term_no":"29034705","out_trade_no":"FD660E1FAA3A4470933CDEDAE1EC1D8E","auth_code":"135178236713755038","total_amount":"123","location_info":{"request_ip":"10.176.1.192","location":"+37.123456789,-121.123456789"},"out_order_no":"08F4542EEC6A4497BC419161747A92FA"}}`
+
+	cli := req.C().SetBaseURL(TestUrl).SetCommonHeaders(map[string]string{"Content-Type": "application/json"})
+
+	// now := time.Now().Unix()
+	now := 1720348216
+	validStr := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", client.cfg.Appid, "017d6ae9ad6e", now, "Tn3G61IkxyHsyJfs0SFUtvSYYsJ9c3aT", body)
+
+	sign, err := common.Sign([]byte(validStr), client.privateKey, crypto.SHA256, sha256.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("sign: %s", sign)
+
+	auth := fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, client.cfg.Appid, "017d6ae9ad6e", now, "Tn3G61IkxyHsyJfs0SFUtvSYYsJ9c3aT", sign)
+
+	t.Logf("auth: %s", auth)
+
+	response := cli.Post("/api/v3/labs/trans/micropay").SetHeader("Authorization", auth).SetBody(body).Do()
+
+	t.Log(response)
 }

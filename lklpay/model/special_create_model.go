@@ -83,6 +83,6 @@ type SpecialCreateRes struct {
 	OrderCreateTime    string `json:"order_create_time"`    // 创建订单时间，必填且格式yyyyMMddHHmmss
 	OrderEfficientTime string `json:"order_efficient_time"` // 订单有效截至时间，必填且格式yyyyMMddHHmmss
 	PayOrderNo         string `json:"pay_order_no"`         // 平台订单号，必填且长度不超过64
-	TotalAmount        int64  `json:"total_amount"`         // 订单金额，单位：分，必填
+	TotalAmount        string `json:"total_amount"`         // 订单金额，单位：分，必填
 	CounterURL         string `json:"counter_url"`          // 收银台地址信息，必填且长度不超过256
 }

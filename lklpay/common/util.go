@@ -1,6 +1,13 @@
 package common
 
 import (
+	"crypto"
+	randc "crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"hash"
 	"math/rand"
 	"time"
 )
@@ -49,4 +56,46 @@ func RandomNumber(l int) string {
 		result = append(result, bytes[r.Intn(len(bytes))])
 	}
 	return string(result)
+}
+
+// Sign 签名
+func Sign(msg []byte, key *rsa.PrivateKey, hashType crypto.Hash, hash hash.Hash) (sign string, err error) {
+	hash.Write(msg)
+	hashed := hash.Sum(nil)
+
+	signature, err := rsa.SignPKCS1v15(randc.Reader, key, hashType, hashed)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(signature), nil
+}
+
+// ParseCertificate 解析证书
+func ParseCertificate(cart []byte) (*x509.Certificate, error) {
+	block, _ := pem.Decode(cart)
+	if block == nil {
+		return nil, NewErrMsg(InternalCode, "failed to parse certificate PEM")
+	}
+
+	return x509.ParseCertificate(block.Bytes)
+}
+
+// ParsePrivateKey 解析私钥
+func ParsePrivateKey(pkcs8Key []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(pkcs8Key)
+	if block == nil {
+		return nil, NewErrMsg(InternalCode, "failed to parse private key")
+	}
+
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, NewErrMsg(InternalCode, "failed to pkcs8Key to rsa.PrivateKey")
+	}
+	return privateKey, nil
 }
