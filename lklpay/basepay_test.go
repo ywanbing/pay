@@ -174,13 +174,14 @@ func TestClient_OrderClose(t *testing.T) {
 
 func Test_Java(t *testing.T) {
 	client := creatClient()
-	body := `{"req_time":"20210907150256","version":"3.0","out_org_code":"OP00000003","req_data":{"merchant_no":"822290070111135","term_no":"29034705","out_trade_no":"FD660E1FAA3A4470933CDEDAE1EC1D8E","auth_code":"135178236713755038","total_amount":"123","location_info":{"request_ip":"10.176.1.192","location":"+37.123456789,-121.123456789"},"out_order_no":"08F4542EEC6A4497BC419161747A92FA"}}`
+	body := fmt.Sprintf(`{"req_time":"20210907150256","version":"3.0","out_org_code":"OP00000003","req_data":{"merchant_no":"%s","term_no":"%s","out_trade_no":"FD660E1FAA3A4470933CDEDAE1EC1D8E","auth_code":"135178236713755038","total_amount":"123","location_info":{"request_ip":"10.176.1.192","location":"+37.123456789,-121.123456789"},"out_order_no":"08F4542EEC6A4497BC419161747A92FA"}}`,
+		client.cfg.MerchantNo, client.cfg.TermNo)
 
 	cli := req.C().SetBaseURL(TestUrl).SetCommonHeaders(map[string]string{"Content-Type": "application/json"})
 
-	// now := time.Now().Unix()
-	now := 1720348216
-	validStr := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", client.cfg.Appid, "017d6ae9ad6e", now, "Tn3G61IkxyHsyJfs0SFUtvSYYsJ9c3aT", body)
+	now := time.Now().Unix()
+	randomStr := common.RandomNumber(32)
+	validStr := fmt.Sprintf("%s\n%s\n%d\n%s\n%s\n", client.cfg.Appid, client.cfg.SerialNo, now, randomStr, body)
 
 	sign, err := common.Sign([]byte(validStr), client.privateKey, crypto.SHA256, sha256.New())
 	if err != nil {
@@ -188,7 +189,7 @@ func Test_Java(t *testing.T) {
 	}
 	t.Logf("sign: %s", sign)
 
-	auth := fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, client.cfg.Appid, "017d6ae9ad6e", now, "Tn3G61IkxyHsyJfs0SFUtvSYYsJ9c3aT", sign)
+	auth := fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, client.cfg.Appid, client.cfg.SerialNo, now, randomStr, sign)
 
 	t.Logf("auth: %s", auth)
 
