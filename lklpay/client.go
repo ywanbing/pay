@@ -182,7 +182,7 @@ func (c *Client) VerifySign(appid, serialNo, ts, nonce, body, sign string) error
 	// ${Lklapi-appid}\n+${Lklapi-serialNo}\n+${Lklapi-timeStamp}\n+${Lklapi-nonceStr}\n+${body}\n
 
 	// 计算签名
-	validStr := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", appid, ts, nonce, serialNo, body)
+	validStr := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", appid, serialNo, ts, nonce, body)
 
 	return c.lklCertificate.CheckSignature(x509.SHA256WithRSA, []byte(validStr), signature)
 }
