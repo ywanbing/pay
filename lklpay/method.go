@@ -5,4 +5,5 @@ const (
 	specialCreateUrl = "/api/v3/ccss/counter/order/special_create"
 	orderQueryUrl    = "/api/v3/ccss/counter/order/query"
 	orderCloseUrl    = "/api/v3/ccss/counter/order/close"
+	refundUrl        = "/api/v3/labs/relation/refund"
 )

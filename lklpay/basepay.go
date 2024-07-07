@@ -93,3 +93,28 @@ func (c *Client) OrderClose(ctx context.Context, reqData model.OrderCloseReq) (r
 
 	return baseResp.RespData, nil
 }
+
+// Refund 收银台订单关闭
+func (c *Client) Refund(ctx context.Context, reqData model.RefundReq) (resp *model.RefundRes, err error) {
+	// 验证请求参数
+	err = c.valid.StructCtx(ctx, reqData)
+	if err != nil {
+		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+	}
+
+	req := model.BaseRequest[model.RefundReq]{
+		ReqData: &reqData,
+		ReqTime: common.GetReqTime(),
+		Version: "3.0",
+	}
+
+	baseResp, err := doPost[model.RefundReq, model.RefundRes](ctx, c, refundUrl, req)
+	if err != nil {
+		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+	}
+	if baseResp.Code != common.SuccessCode {
+		return nil, common.NewErrMsg(baseResp.Code, baseResp.Msg)
+	}
+
+	return baseResp.RespData, nil
+}

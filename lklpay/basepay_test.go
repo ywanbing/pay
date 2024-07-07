@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -123,7 +124,7 @@ func TestClient_OrderSpecialCreate(t *testing.T) {
 				t.Errorf("OrderSpecialCreate() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Logf("OrderSpecialCreate() gotResp = %v", gotResp)
+			t.Logf("OrderSpecialCreate() gotResp = %+v", gotResp)
 		})
 	}
 }
@@ -137,11 +138,10 @@ func TestClient_OrderClose(t *testing.T) {
 		reqData model.OrderCloseReq
 	}
 	tests := []struct {
-		name     string
-		fields   fields
-		args     args
-		wantResp *model.SpecialCreateRes
-		wantErr  bool
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
 	}{
 		{
 			name: "test1",
@@ -155,8 +155,7 @@ func TestClient_OrderClose(t *testing.T) {
 					OutOrderNo: "234456789",
 				},
 			},
-			wantResp: nil,
-			wantErr:  false,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -164,10 +163,103 @@ func TestClient_OrderClose(t *testing.T) {
 			c := tt.fields.cli
 			gotResp, err := c.OrderClose(tt.args.ctx, tt.args.reqData)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("OrderSpecialCreate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("OrderClose() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Logf("OrderSpecialCreate() gotResp = %v", gotResp)
+			t.Logf("OrderClose() gotResp = %+v", gotResp)
+		})
+	}
+}
+
+func TestClient_OrderQuery(t *testing.T) {
+	type fields struct {
+		cli *Client
+	}
+	type args struct {
+		ctx     context.Context
+		reqData model.OrderQueryReq
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test_query",
+			fields: fields{
+				cli: creatClient(),
+			},
+			args: args{
+				ctx: context.Background(),
+				reqData: model.OrderQueryReq{
+					MerchantNo: "822290059430BCY",
+					OutOrderNo: "233456789",
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.fields.cli
+			gotResp, err := c.OrderQuery(tt.args.ctx, tt.args.reqData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OrderQuery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			bytes, _ := json.Marshal(gotResp)
+			t.Logf("OrderQuery() gotResp = %s ", bytes)
+		})
+	}
+}
+
+func TestClient_Refund(t *testing.T) {
+	type fields struct {
+		cli *Client
+	}
+	type args struct {
+		ctx     context.Context
+		reqData model.RefundReq
+	}
+	cli := creatClient()
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test_refund",
+			fields: fields{
+				cli: cli,
+			},
+			args: args{
+				ctx: context.Background(),
+				reqData: model.RefundReq{
+					MerchantNo:    "822290059430BCY",
+					OutTradeNo:    "233456789",
+					TermNo:        cli.cfg.TermNo,
+					RefundAmount:  "1",
+					OriginTradeNo: "2024070766210315680315",
+					OriginLogNo:   "66210315680315",
+					LocationInfo: &model.LocationInfo{
+						RequestIp: "127.0.0.1",
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.fields.cli
+			gotResp, err := c.Refund(tt.args.ctx, tt.args.reqData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OrderQuery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("OrderQuery() gotResp = %+v", gotResp)
 		})
 	}
 }
