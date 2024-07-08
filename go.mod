@@ -2,7 +2,10 @@ module github.com/ywanbing/pay
 
 go 1.22
 
-require github.com/imroc/req/v3 v3.43.7
+require (
+	github.com/go-playground/validator/v10 v10.22.0
+	github.com/imroc/req/v3 v3.43.7
+)
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
@@ -10,7 +13,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.22.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
