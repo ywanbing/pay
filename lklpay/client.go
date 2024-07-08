@@ -187,6 +187,32 @@ func (c *Client) VerifySign(appid, serialNo, ts, nonce, body, sign string) error
 	return c.lklCertificate.CheckSignature(x509.SHA256WithRSA, []byte(validStr), signature)
 }
 
+// ReSet 重新设置配置
+func (c *Client) ReSet(cfg Config, options ...Option) {
+	c.cfg = cfg
+
+	for _, option := range options {
+		option(c)
+	}
+
+	c.initHttpClient()
+	c.hash = c.hashType.New()
+
+	// 解析公钥证书
+	lklCertificate, err := c.getLklCertificate()
+	if err != nil {
+		panic(err)
+	}
+	c.lklCertificate = lklCertificate
+
+	// 解析私钥
+	privateKey, err := c.getPrivateKey()
+	if err != nil {
+		panic(err)
+	}
+	c.privateKey = privateKey
+}
+
 func (c *Client) getLklCertificate() (*x509.Certificate, error) {
 	content := ""
 	if c.cfg.SyncPublicKey != "" {
