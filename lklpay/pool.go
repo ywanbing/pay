@@ -18,11 +18,13 @@ func NewPool() *Pool {
 		pool: sync.Pool{
 			New: func() interface{} {
 				return &Client{
-					ctx:      context.Background(),
-					log:      log.DefLogger(),
-					isProd:   false,
-					valid:    validator.New(),
-					hashType: crypto.SHA256,
+					ctx:         context.Background(),
+					log:         log.DefLogger(),
+					isProd:      false,
+					nonceStrLen: 12,
+					verifyResp:  false,
+					valid:       validator.New(),
+					hashType:    crypto.SHA256,
 				}
 			},
 		},

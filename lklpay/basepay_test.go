@@ -77,7 +77,8 @@ QsFLQgFyXgvDnzr/o+hQJelW
 `,
 		SyncPubicPath:   "",
 		SignPrivatePath: "",
-	})
+	},
+		WithVerifyResp(true))
 }
 
 func TestClient_OrderSpecialCreate(t *testing.T) {
@@ -103,7 +104,7 @@ func TestClient_OrderSpecialCreate(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				reqData: model.SpecialCreateReq{
-					OutOrderNo:           "234456789",
+					OutOrderNo:           "0234456789",
 					MerchantNo:           "822290059430BCY",
 					TotalAmount:          1,
 					OrderEfficientTime:   common.FormatTime(time.Now().Add(time.Minute * 5)),
@@ -194,7 +195,7 @@ func TestClient_OrderQuery(t *testing.T) {
 				ctx: context.Background(),
 				reqData: model.OrderQueryReq{
 					MerchantNo: "822290059430BCY",
-					OutOrderNo: "233456789",
+					OutOrderNo: "0234456789",
 				},
 			},
 			wantErr: false,
@@ -288,4 +289,29 @@ func Test_Java(t *testing.T) {
 	response := cli.Post("/api/v3/labs/trans/micropay").SetHeader("Authorization", auth).SetBody(body).Do()
 
 	t.Log(response)
+}
+
+func TestVerifySign(t *testing.T) {
+	client := creatClient()
+	/*
+		Lklapi-Appid: OP00000003
+		Lklapi-Traceid: eqn9QTc7qKmPCSCMm
+		Lklapi-Serial: 1745381c327
+		Lklapi-Signature: kVgF6/eH/05si6dM4WFqka7WmlFkCniBvGYnYcbFfnpL+nplLbY7swxfg4O4G0u8e9oh92+jrV+lCveakoE4K8wHqJUSJsW/g0X5qwDhThpKbL3bKSwUyjTXh+qrM6JkQk8hHoJt6eI+blTNqvJ27LfYJMjRigBYigNLWaZXFWd88mlkF9Zk/s60MPGXfUcJPPfGjzuT7x+zoRcRkVCWZO1KhsCeJphU6xM2VTK92eeFndsY+gikicRcJCKToV5Gc3fkOwk2bbFCw9ce2hlUba86NcQMiqbwD8ngy4QI/A5yzX+6BIAMTu2+x0hpBzyeoO0vHI0BuTvEDOF8sv38rg==
+		Lklapi-Timestamp: 1720678638
+		Lklapi-Nonce: ArgBcKYQtHLD
+	*/
+	var appid, serialNo, ts, nonce, body, sign string
+	appid = "OP00000003"
+	serialNo = "1745381c327"
+	ts = "1720678638"
+	nonce = "ArgBcKYQtHLD"
+	body = `{"code":"000000","msg":"操作成功","resp_time":"20240711141715","resp_data":{"merchant_no":"822290059430BCY","channel_id":"95","out_order_no":"0234456789","order_create_time":"20240711141715","order_efficient_time":"20240711142216","pay_order_no":"24071111012001101011001304914","total_amount":"1","counter_url":"https://pay.wsmsd.cn/r/0000?pageStyle%3DV2%26token%3DCCSSIZ5wnqqemB40EXc7U40gGcb7rxoKuxVhhVI7XyulHEUboR1J21LJqZZPDO053tJ2vIjabliIY1f32w%3D%3D%26amount%3D1%26payOrderNo%3D24071111012001101011001304914%26mndf%3D1"}}`
+	sign = "kVgF6/eH/05si6dM4WFqka7WmlFkCniBvGYnYcbFfnpL+nplLbY7swxfg4O4G0u8e9oh92+jrV+lCveakoE4K8wHqJUSJsW/g0X5qwDhThpKbL3bKSwUyjTXh+qrM6JkQk8hHoJt6eI+blTNqvJ27LfYJMjRigBYigNLWaZXFWd88mlkF9Zk/s60MPGXfUcJPPfGjzuT7x+zoRcRkVCWZO1KhsCeJphU6xM2VTK92eeFndsY+gikicRcJCKToV5Gc3fkOwk2bbFCw9ce2hlUba86NcQMiqbwD8ngy4QI/A5yzX+6BIAMTu2+x0hpBzyeoO0vHI0BuTvEDOF8sv38rg=="
+
+	err := client.VerifySign(appid, serialNo, ts, nonce, body, sign)
+	if err != nil {
+		t.Log("verify sign failed")
+	}
+	t.Log("verify sign ok")
 }

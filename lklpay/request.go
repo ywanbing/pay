@@ -3,7 +3,9 @@ package lklpay
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
+	"github.com/imroc/req/v3"
 	"github.com/ywanbing/pay/lklpay/model"
 )
 
@@ -23,6 +25,18 @@ func doPost[D any, R any](ctx context.Context, c *Client, url string, reqData mo
 
 	c.log.Debugf("auth: %s", auth)
 
-	err = c.cli.Post(url).SetHeader("Authorization", auth).SetBodyBytes(bytes).Do(ctx).Into(resp)
+	response := c.cli.Post(url).SetHeader("Authorization", auth).SetBodyBytes(bytes).Do(ctx)
+
+	// 是否验证签名
+	if c.verifyResp && !verifyResp(c, response) {
+		return nil, fmt.Errorf("verify response error")
+	}
+
+	err = response.Into(resp)
 	return
+}
+
+func verifyResp(c *Client, resp *req.Response) bool {
+	body, _ := resp.ToBytes()
+	return c.VerifySignForHeaderAndBody(resp.Header, body) == nil
 }

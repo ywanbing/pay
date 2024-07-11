@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"hash"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -74,15 +75,31 @@ func WithHash(hashType crypto.Hash) Option {
 	}
 }
 
+// WithNonceStrLen set nonceStr len
+func WithNonceStrLen(nonceStrLen int) Option {
+	return func(client *Client) {
+		client.nonceStrLen = nonceStrLen
+	}
+}
+
+// WithVerifyResp set verify resp
+func WithVerifyResp(verifyResp bool) Option {
+	return func(client *Client) {
+		client.verifyResp = verifyResp
+	}
+}
+
 // Client pay client
 type Client struct {
 	ctx context.Context // 上下文
 	cfg Config          // 配置
 	log log.Logger      // logger
 
-	isProd bool                // 是否生产环境
-	valid  *validator.Validate // 参数校验
-	cli    *req.Client
+	isProd      bool                // 是否生产环境
+	nonceStrLen int                 // 随机字符串长度,默认12
+	verifyResp  bool                // 是否响应验签
+	valid       *validator.Validate // 参数校验
+	cli         *req.Client
 
 	lklCertificate *x509.Certificate // 拉卡拉公钥证书
 	privateKey     *rsa.PrivateKey   // 自己的私钥
@@ -94,12 +111,14 @@ type Client struct {
 // New a pay client
 func New(cfg Config, options ...Option) *Client {
 	client := &Client{
-		ctx:      context.Background(),
-		cfg:      cfg,
-		log:      log.DefLogger(),
-		isProd:   false,
-		valid:    validator.New(),
-		hashType: crypto.SHA256,
+		ctx:         context.Background(),
+		cfg:         cfg,
+		log:         log.DefLogger(),
+		isProd:      false,
+		verifyResp:  false,
+		nonceStrLen: 12,
+		valid:       validator.New(),
+		hashType:    crypto.SHA256,
 	}
 
 	for _, option := range options {
@@ -149,7 +168,7 @@ func (c *Client) getRsaSign(body []byte) (auth string, err error) {
 	var (
 		appid    = c.cfg.Appid
 		ts       = time.Now().Unix()
-		nonceStr = common.RandomString(32)
+		nonceStr = common.RandomString(c.nonceStrLen)
 		serialNo = c.cfg.SerialNo
 	)
 	if appid == "" || nonceStr == "" || serialNo == "" {
@@ -172,6 +191,16 @@ func (c *Client) getRsaSign(body []byte) (auth string, err error) {
 
 	// 拼接签名
 	return fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, appid, serialNo, ts, nonceStr, sign), nil
+}
+
+// VerifySignForHeaderAndBody 验证签名（直接送上来的header和body）
+func (c *Client) VerifySignForHeaderAndBody(header http.Header, body []byte) error {
+	appid := header.Get(common.Lklapi_Appid)
+	serialNo := header.Get(common.Lklapi_Serial)
+	ts := header.Get(common.Lklapi_Timestamp)
+	nonce := header.Get(common.Lklapi_Nonce)
+	sign := header.Get(common.Lklapi_Sign)
+	return c.VerifySign(appid, serialNo, ts, nonce, string(body), sign)
 }
 
 func (c *Client) VerifySign(appid, serialNo, ts, nonce, body, sign string) error {
