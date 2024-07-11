@@ -213,7 +213,13 @@ func (c *Client) VerifySign(appid, serialNo, ts, nonce, body, sign string) error
 	// 计算签名
 	validStr := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", appid, serialNo, ts, nonce, body)
 
-	return c.lklCertificate.CheckSignature(x509.SHA256WithRSA, []byte(validStr), signature)
+	err := c.lklCertificate.CheckSignature(x509.SHA256WithRSA, []byte(validStr), signature)
+	if err != nil {
+		c.log.Errorf("verify sign error: %v \n appid: %s, serialNo: %s, ts: %s, nonce: %s, sign: %s, body: %s",
+			err, appid, serialNo, ts, nonce, sign, body)
+		return err
+	}
+	return nil
 }
 
 // ReSet 重新设置配置
