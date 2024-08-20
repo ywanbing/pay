@@ -38,5 +38,5 @@ func doPost[D any, R any](ctx context.Context, c *Client, url string, reqData mo
 
 func verifyResp(c *Client, resp *req.Response) bool {
 	body, _ := resp.ToBytes()
-	return c.VerifySignForHeaderAndBody(resp.Header, body) == nil
+	return c.VerifyResponseSign(resp.Header, body) == nil
 }

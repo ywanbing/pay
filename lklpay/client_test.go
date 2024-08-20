@@ -70,7 +70,7 @@ func TestVerifySignForAuth(t *testing.T) {
 	body := `{"code":"000000","msg":"操作成功","resp_time":"20240711141715","resp_data":{"merchant_no":"822290059430BCY","channel_id":"95","out_order_no":"0234456789","order_create_time":"20240711141715","order_efficient_time":"20240711142216","pay_order_no":"24071111012001101011001304914","total_amount":"1","counter_url":"https://pay.wsmsd.cn/r/0000?pageStyle%3DV2%26token%3DCCSSIZ5wnqqemB40EXc7U40gGcb7rxoKuxVhhVI7XyulHEUboR1J21LJqZZPDO053tJ2vIjabliIY1f32w%3D%3D%26amount%3D1%26payOrderNo%3D24071111012001101011001304914%26mndf%3D1"}}`
 
 	// 获取签名信息
-	auth, err := client.getRsaSign([]byte(body))
+	auth, err := client.getRsaNotifySign([]byte(body))
 	if err != nil {
 		t.Log("get sign failed", err)
 	}
