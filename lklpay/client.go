@@ -10,6 +10,7 @@ import (
 	"hash"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -193,7 +194,7 @@ func (c *Client) getRsaSign(body []byte) (auth string, err error) {
 	return fmt.Sprintf(common.AuthFormat, common.Algorism_SHA256, appid, serialNo, ts, nonceStr, sign), nil
 }
 
-// VerifySignForHeaderAndBody 验证签名（直接送上来的header和body）
+// VerifySignForHeaderAndBody 验证响应签名（直接送上来的header和body）
 func (c *Client) VerifySignForHeaderAndBody(header http.Header, body []byte) error {
 	appid := header.Get(common.Lklapi_Appid)
 	serialNo := header.Get(common.Lklapi_Serial)
@@ -201,6 +202,49 @@ func (c *Client) VerifySignForHeaderAndBody(header http.Header, body []byte) err
 	nonce := header.Get(common.Lklapi_Nonce)
 	sign := header.Get(common.Lklapi_Sign)
 	return c.VerifySign(appid, serialNo, ts, nonce, string(body), sign)
+}
+
+// VerifySignForAuth 验证请求auth签名
+func (c *Client) VerifySignForAuth(auth string, body []byte) error {
+	var (
+		appid, serialNo, ts, nonce, sign string
+	)
+
+	split := strings.Split(auth, " ")
+	if len(split) != 2 {
+		return fmt.Errorf("auth format error")
+	}
+
+	params := strings.Split(split[1], ",")
+	for _, param := range params {
+		kv := strings.SplitN(param, "=", 2)
+		if len(kv) != 2 {
+			return fmt.Errorf("auth format error")
+		}
+		switch kv[0] {
+		case common.AuthAppid:
+			appid = strings.Trim(kv[1], `"`)
+		case common.AuthSerialNo:
+			serialNo = strings.Trim(kv[1], `"`)
+		case common.AuthTimestamp:
+			ts = strings.Trim(kv[1], `"`)
+		case common.AuthNonceStr:
+			nonce = strings.Trim(kv[1], `"`)
+		case common.AuthSignature:
+			sign = strings.Trim(kv[1], `"`)
+		}
+	}
+
+	return c.VerifySign(appid, serialNo, ts, nonce, string(body), sign)
+}
+
+// VerifySignForReq 验证请求request签名
+func (c *Client) VerifySignForReq(req *http.Request, body []byte) error {
+	auth := req.Header.Get(common.Authorization)
+	if auth == "" {
+		return fmt.Errorf("request header Authorization is empty")
+	}
+	return c.VerifySignForAuth(auth, body)
 }
 
 func (c *Client) VerifySign(appid, serialNo, ts, nonce, body, sign string) error {
