@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
@@ -90,6 +91,13 @@ func WithVerifyResp(verifyResp bool) Option {
 	}
 }
 
+// WithVerifyHttps set verify https
+func WithVerifyHttps() Option {
+	return func(client *Client) {
+		client.verifyHttps = true
+	}
+}
+
 // Client pay client
 type Client struct {
 	ctx context.Context // 上下文
@@ -99,6 +107,7 @@ type Client struct {
 	isProd      bool                // 是否生产环境
 	nonceStrLen int                 // 随机字符串长度,默认12
 	verifyResp  bool                // 是否响应验签
+	verifyHttps bool                // 是否验证https
 	valid       *validator.Validate // 参数校验
 	cli         *req.Client
 
@@ -117,6 +126,7 @@ func New(cfg Config, options ...Option) *Client {
 		log:         log.DefLogger(),
 		isProd:      false,
 		verifyResp:  false,
+		verifyHttps: false,
 		nonceStrLen: 12,
 		valid:       validator.New(),
 		hashType:    crypto.SHA256,
@@ -159,6 +169,9 @@ func (c *Client) initHttpClient() {
 		cli.SetBaseURL(TestUrl)
 	}
 
+	cli.SetTLSClientConfig(&tls.Config{
+		InsecureSkipVerify: c.verifyHttps,
+	})
 	cli.SetLogger(c.log)
 	cli.SetCommonContentType("application/json")
 	c.cli = cli
