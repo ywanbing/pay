@@ -170,7 +170,7 @@ func (c *Client) initHttpClient() {
 	}
 
 	cli.SetTLSClientConfig(&tls.Config{
-		InsecureSkipVerify: c.verifyHttps,
+		InsecureSkipVerify: !c.verifyHttps,
 	})
 	cli.SetLogger(c.log)
 	cli.SetCommonContentType("application/json")
