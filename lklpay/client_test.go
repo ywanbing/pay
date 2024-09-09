@@ -4,10 +4,8 @@ import "testing"
 
 func createClient() *Client {
 	return New(Config{
-		Appid:      "OP00000003",
-		SerialNo:   "00dfba8194c41b84cf",
-		MerchantNo: "822290059430BCY",
-		TermNo:     "A9254710",
+		Appid:    "OP00000003",
+		SerialNo: "00dfba8194c41b84cf",
 		SyncPublicKey: `-----BEGIN CERTIFICATE-----
 MIIDYTCCAkmgAwIBAgIJAN+6gZTEG4TPMA0GCSqGSIb3DQEBCwUAMEkxCzAJBgNV
 BAYTAlVTMREwDwYDVQQIEwhzaGFuZ2hhaTERMA8GA1UEBxMIc2hhbmdoYWkxFDAS

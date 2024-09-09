@@ -13,7 +13,7 @@ func (c *Client) OrderSpecialCreate(ctx context.Context, reqData model.SpecialCr
 	// 验证请求参数
 	err = c.valid.StructCtx(ctx, reqData)
 	if err != nil {
-		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+		return nil, common.NewErrMsg(common.PramErrorCode, err.Error())
 	}
 
 	req := model.BaseRequest[model.SpecialCreateReq]{
@@ -49,7 +49,7 @@ func (c *Client) OrderQuery(ctx context.Context, reqData model.OrderQueryReq) (r
 	// 验证请求参数
 	err = c.valid.StructCtx(ctx, reqData)
 	if err != nil {
-		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+		return nil, common.NewErrMsg(common.PramErrorCode, err.Error())
 	}
 
 	req := model.BaseRequest[model.OrderQueryReq]{
@@ -74,7 +74,7 @@ func (c *Client) OrderClose(ctx context.Context, reqData model.OrderCloseReq) (r
 	// 验证请求参数
 	err = c.valid.StructCtx(ctx, reqData)
 	if err != nil {
-		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+		return nil, common.NewErrMsg(common.PramErrorCode, err.Error())
 	}
 
 	req := model.BaseRequest[model.OrderCloseReq]{
@@ -99,7 +99,7 @@ func (c *Client) Refund(ctx context.Context, reqData model.RefundReq) (resp *mod
 	// 验证请求参数
 	err = c.valid.StructCtx(ctx, reqData)
 	if err != nil {
-		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+		return nil, common.NewErrMsg(common.PramErrorCode, err.Error())
 	}
 
 	req := model.BaseRequest[model.RefundReq]{

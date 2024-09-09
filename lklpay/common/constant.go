@@ -95,3 +95,31 @@ const (
 	OrderStatus_6 OrderStatus = "6" // 部分退款或者全部退款
 	OrderStatus_7 OrderStatus = "7" // 订单已关闭
 )
+
+// AccountType 微信：WECHAT 支付宝：ALIPAY 银联：UQRCODEPAY 翼支付: BESTPAY 苏宁易付宝: SUNING 拉卡拉支付账户：LKLACC 网联小钱包：NUCSPAY
+type AccountType string
+
+const (
+	AccountType_WECHAT     AccountType = "WECHAT"     // 微信
+	AccountType_ALIPAY     AccountType = "ALIPAY"     // 支付宝
+	AccountType_UQRCODEPAY AccountType = "UQRCODEPAY" // 银联
+	AccountType_BESTPAY    AccountType = "BESTPAY"    // 翼支付
+	AccountType_SUNING     AccountType = "SUNING"     // 苏宁易付宝
+	AccountType_LKLACC     AccountType = "LKLACC"     // 拉卡拉支付账户
+	AccountType_NUCSPAY    AccountType = "NUCSPAY"    // 网联小钱包
+)
+
+// TransType 接入方式
+//
+//	41:NATIVE（ALIPAY，云闪付支持）
+//	51:JSAPI（微信公众号支付，支付宝服务窗支付，银联JS支付，翼支付JS支付、拉卡拉钱包支付）
+//	71:微信小程序支付
+//	61:APP支付（微信APP支付）
+type TransType string
+
+const (
+	TransType_NATIVE TransType = "41" // NATIVE（ALIPAY，云闪付支持）
+	TransType_JSAPI  TransType = "51" // JSAPI（微信公众号支付，支付宝服务窗支付，银联JS支付，翼支付JS支付、拉卡拉钱包支付）
+	TransType_WEIXIN TransType = "71" // 微信小程序支付
+	TransType_APP    TransType = "61" // APP支付（微信APP支付）
+)

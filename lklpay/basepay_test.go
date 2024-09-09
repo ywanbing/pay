@@ -16,10 +16,8 @@ import (
 
 func creatClient() *Client {
 	return New(Config{
-		Appid:      "OP00000003",
-		SerialNo:   "00dfba8194c41b84cf",
-		MerchantNo: "822290059430BCY",
-		TermNo:     "A9254710",
+		Appid:    "OP00000003",
+		SerialNo: "00dfba8194c41b84cf",
 		SyncPublicKey: `-----BEGIN CERTIFICATE-----
 MIIEMTCCAxmgAwIBAgIGAXRTgcMnMA0GCSqGSIb3DQEBCwUAMHYxCzAJBgNVBAYT
 AkNOMRAwDgYDVQQIDAdCZWlKaW5nMRAwDgYDVQQHDAdCZWlKaW5nMRcwFQYDVQQK
@@ -240,7 +238,7 @@ func TestClient_Refund(t *testing.T) {
 				reqData: model.RefundReq{
 					MerchantNo:    "822290059430BCY",
 					OutTradeNo:    "233456789",
-					TermNo:        cli.cfg.TermNo,
+					TermNo:        "A9254710",
 					RefundAmount:  "1",
 					OriginTradeNo: "2024070766210315680315",
 					OriginLogNo:   "66210315680315",
@@ -268,7 +266,7 @@ func TestClient_Refund(t *testing.T) {
 func Test_Java(t *testing.T) {
 	client := creatClient()
 	body := fmt.Sprintf(`{"req_time":"20210907150256","version":"3.0","out_org_code":"OP00000003","req_data":{"merchant_no":"%s","term_no":"%s","out_trade_no":"FD660E1FAA3A4470933CDEDAE1EC1D8E","auth_code":"135178236713755038","total_amount":"123","location_info":{"request_ip":"10.176.1.192","location":"+37.123456789,-121.123456789"},"out_order_no":"08F4542EEC6A4497BC419161747A92FA"}}`,
-		client.cfg.MerchantNo, client.cfg.TermNo)
+		"822290059430BCY", "A9254710")
 
 	cli := req.C().SetBaseURL(TestUrl).SetCommonHeaders(map[string]string{"Content-Type": "application/json"})
 
