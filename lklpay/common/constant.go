@@ -96,7 +96,15 @@ const (
 	OrderStatus_7 OrderStatus = "7" // 订单已关闭
 )
 
-// AccountType 微信：WECHAT 支付宝：ALIPAY 银联：UQRCODEPAY 翼支付: BESTPAY 苏宁易付宝: SUNING 拉卡拉支付账户：LKLACC 网联小钱包：NUCSPAY
+// AccountType 钱包类型
+//
+//	微信：WECHAT
+//	支付宝：ALIPAY
+//	银联：UQRCODEPAY
+//	翼支付: BESTPAY
+//	苏宁易付宝: SUNING
+//	拉卡拉支付账户：LKLACC
+//	网联小钱包：NUCSPAY
 type AccountType string
 
 const (

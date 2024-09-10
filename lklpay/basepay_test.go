@@ -237,11 +237,11 @@ func TestClient_Refund(t *testing.T) {
 				ctx: context.Background(),
 				reqData: model.RefundReq{
 					MerchantNo:    "822290059430BCY",
-					OutTradeNo:    "233456789",
+					OutTradeNo:    "0234456788",
 					TermNo:        "A9254710",
 					RefundAmount:  "1",
-					OriginTradeNo: "2024070766210315680315",
-					OriginLogNo:   "66210315680315",
+					OriginTradeNo: "2024091066210316640558",
+					OriginLogNo:   "66210316640558",
 					LocationInfo: &model.LocationInfo{
 						RequestIp: "127.0.0.1",
 					},
@@ -312,4 +312,149 @@ func TestVerifySign(t *testing.T) {
 		t.Log("verify sign failed")
 	}
 	t.Log("verify sign ok")
+}
+
+func TestClient_ConvergeActiveCreate(t *testing.T) {
+	type fields struct {
+		cli *Client
+	}
+	type args struct {
+		ctx     context.Context
+		reqData model.ConvergeActiveReq[model.AliPayAccBusiFields]
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		wantResp *model.SpecialCreateRes
+		wantErr  bool
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				cli: creatClient(),
+			},
+			args: args{
+				ctx: context.Background(),
+				reqData: model.ConvergeActiveReq[model.AliPayAccBusiFields]{
+					MerchantNo:   "822290059430BCY",
+					TermNo:       "A9254710",
+					OutTradeNo:   "0234456777",
+					AccountType:  common.AccountType_ALIPAY,
+					TransType:    common.TransType_NATIVE,
+					TotalAmount:  "1",
+					Subject:      "测试订单",
+					LocationInfo: &model.LocationInfo{RequestIp: "127.0.0.1"},
+					AccBusiFields: &model.AliPayAccBusiFields{
+						TimeoutExpress: "5",
+						MinAge:         "18",
+					},
+				},
+			},
+			wantResp: nil,
+			wantErr:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.fields.cli
+			gotResp, err := ConvergeActive[model.AliPayAccBusiFields, model.AliPayNativeResp](c, tt.args.ctx, tt.args.reqData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OrderSpecialCreate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("OrderSpecialCreate() gotResp = %+v", gotResp)
+			t.Logf("alipay resp: %+v", gotResp.AccRespFields)
+		})
+	}
+}
+
+func TestClient_ConvergeActiveQuery(t *testing.T) {
+	type fields struct {
+		cli *Client
+	}
+	type args struct {
+		ctx     context.Context
+		reqData model.ConvergeActiveQueryReq
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test_query",
+			fields: fields{
+				cli: creatClient(),
+			},
+			args: args{
+				ctx: context.Background(),
+				reqData: model.ConvergeActiveQueryReq{
+					MerchantNo: "822290059430BCY",
+					TermNo:     "A9254710",
+					OutTradeNo: "0234456777",
+					// TradeNo:    "2024091066210316640558",
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.fields.cli
+			gotResp, err := c.ConvergeActiveQuery(tt.args.ctx, tt.args.reqData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OrderQuery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			bytes, _ := json.Marshal(gotResp)
+			t.Logf("OrderQuery() gotResp = %s ", bytes)
+		})
+	}
+}
+
+func TestClient_ConvergeActiveClose(t *testing.T) {
+	type fields struct {
+		cli *Client
+	}
+	type args struct {
+		ctx     context.Context
+		reqData model.ConvergeActiveCloseReq
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test1",
+			fields: fields{
+				cli: creatClient(),
+			},
+			args: args{
+				ctx: context.Background(),
+				reqData: model.ConvergeActiveCloseReq{
+					MerchantNo:       "822290059430BCY",
+					TermNo:           "A9254710",
+					OriginOutTradeNo: "0234456777",
+					// OriginTradeNo:    "2024091066210316640583",
+					LocationInfo: &model.LocationInfo{RequestIp: "127.0.0.1"},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.fields.cli
+			gotResp, err := c.ConvergeActiveClose(tt.args.ctx, tt.args.reqData)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OrderClose() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("OrderClose() gotResp = %+v", gotResp)
+		})
+	}
 }

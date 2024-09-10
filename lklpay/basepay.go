@@ -94,7 +94,7 @@ func (c *Client) OrderClose(ctx context.Context, reqData model.OrderCloseReq) (r
 	return baseResp.RespData, nil
 }
 
-// Refund 收银台订单关闭
+// Refund 退款
 func (c *Client) Refund(ctx context.Context, reqData model.RefundReq) (resp *model.RefundRes, err error) {
 	// 验证请求参数
 	err = c.valid.StructCtx(ctx, reqData)
@@ -113,6 +113,71 @@ func (c *Client) Refund(ctx context.Context, reqData model.RefundReq) (resp *mod
 		return nil, common.NewErrMsg(common.InternalCode, err.Error())
 	}
 	if baseResp.Code != common.SuccessCode {
+		return nil, common.NewErrMsg(baseResp.Code, baseResp.Msg)
+	}
+
+	return baseResp.RespData, nil
+}
+
+// ConvergeActive 聚合主扫
+func ConvergeActive[D model.AliPayAccBusiFields | model.WechatAccBusiFields,
+	S model.AliPayNativeResp | model.AliPayJsApiResp | model.WxResp | model.WxAppResp](c *Client, ctx context.Context,
+	reqData model.ConvergeActiveReq[D]) (resp *model.ConvergeActiveRes[S], err error) {
+	req := model.BaseRequest[model.ConvergeActiveReq[D]]{
+		ReqData: &reqData,
+		ReqTime: common.GetReqTime(),
+		Version: "3.0",
+	}
+
+	baseResp, err := doPost[model.ConvergeActiveReq[D], model.ConvergeActiveRes[S]](ctx, c, convergeActive, req)
+	if err != nil {
+		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+	}
+	if baseResp.Code != common.CASuccess {
+		return nil, common.NewErrMsg(baseResp.Code, baseResp.Msg)
+	}
+
+	return baseResp.RespData, nil
+}
+
+// ConvergeActiveQuery 拉卡拉主扫结果查询
+func (c *Client) ConvergeActiveQuery(ctx context.Context, reqData model.ConvergeActiveQueryReq) (resp *model.ConvergeActiveQueryRes, err error) {
+	req := model.BaseRequest[model.ConvergeActiveQueryReq]{
+		ReqData: &reqData,
+		ReqTime: common.GetReqTime(),
+		Version: "3.0",
+	}
+
+	baseResp, err := doPost[model.ConvergeActiveQueryReq, model.ConvergeActiveQueryRes](ctx, c, convergeActiveQuery, req)
+	if err != nil {
+		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+	}
+	if baseResp.Code != common.CASuccess {
+		return nil, common.NewErrMsg(baseResp.Code, baseResp.Msg)
+	}
+
+	return baseResp.RespData, nil
+}
+
+// ConvergeActiveClose 聚合主扫订单关闭
+func (c *Client) ConvergeActiveClose(ctx context.Context, reqData model.ConvergeActiveCloseReq) (resp *model.ConvergeActiveCloseRes, err error) {
+	// 验证请求参数
+	err = c.valid.StructCtx(ctx, reqData)
+	if err != nil {
+		return nil, common.NewErrMsg(common.PramErrorCode, err.Error())
+	}
+
+	req := model.BaseRequest[model.ConvergeActiveCloseReq]{
+		ReqData: &reqData,
+		ReqTime: common.GetReqTime(),
+		Version: "3.0",
+	}
+
+	baseResp, err := doPost[model.ConvergeActiveCloseReq, model.ConvergeActiveCloseRes](ctx, c, convergeActiveClose, req)
+	if err != nil {
+		return nil, common.NewErrMsg(common.InternalCode, err.Error())
+	}
+	if baseResp.Code != common.CASuccess {
 		return nil, common.NewErrMsg(baseResp.Code, baseResp.Msg)
 	}
 

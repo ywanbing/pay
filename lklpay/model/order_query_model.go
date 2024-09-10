@@ -31,7 +31,7 @@ type OrderQueryRes struct {
 	CounterRemark      string            `json:"counter_remark" validate:"omitempty,max=64"`      // 收银台备注
 	BusiTypeParam      string            `json:"busi_type_param" validate:"omitempty,max=256"`    // 业务类型控制参数(json字符串：[]model.BusiTypeParam)
 	OutSplitInfo       []*OutSplitInfo   `json:"out_split_info" validate:"omitempty,dive"`        // 商户拆单信息
-	SplitInfo          []OrderSplitInfo  `json:"split_info" validate:"omitempty,dive"`            // 交易拆单信息
+	SplitInfo          []*OrderSplitInfo `json:"split_info" validate:"omitempty,dive"`            // 交易拆单信息
 	SgnInfo            []string          `json:"sgn_info" validate:"omitempty"`                   // 签约协议号列表
 	GoodsMark          string            `json:"goods_mark" validate:"omitempty,max=2"`           // 商品标识
 	GoodsField         string            `json:"goods_field" validate:"omitempty,max=2048"`       // 商品信息

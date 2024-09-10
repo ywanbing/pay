@@ -8,6 +8,8 @@ const (
 	SuccessCode   = "000000"
 	InternalCode  = "-1" // 内部错误
 	PramErrorCode = "-2" // 参数错误
+
+	CASuccess = "BBS00000"
 )
 
 type ErrMsg struct {

@@ -52,10 +52,11 @@ type OrderTradeInfo struct {
 }
 
 type OrderSplitInfo struct {
-	SubTradeNo    string `json:"sub_trade_no" validate:"required,max=32"`     // 子单交易流水号
-	SubLogNo      string `json:"sub_log_no" validate:"required,max=14"`       // 子单对账单流水号
-	OutSubTradeNo string `json:"out_sub_trade_no" validate:"required,max=32"` // 商户子交易流水号，商户号下唯一
-	MerchantNo    string `json:"merchant_no" validate:"required,max=32"`      // 拉卡拉分配的银联商户号
-	TermNo        string `json:"term_no" validate:"required,max=32"`          // 拉卡拉分配的业务终端号
-	Amount        int64  `json:"amount" validate:"required"`                  // 单位分，整数型字符
+	SubTradeNo    string `json:"sub_trade_no" validate:"required,max=32"`             // 子单交易流水号
+	SubLogNo      string `json:"sub_log_no" validate:"required,max=14"`               // 子单对账单流水号
+	OutSubTradeNo string `json:"out_sub_trade_no" validate:"required,max=32"`         // 商户子交易流水号，商户号下唯一
+	MerchantNo    string `json:"merchant_no" validate:"required,max=32"`              // 拉卡拉分配的银联商户号
+	MerchantName  string `json:"merchant_name,omitempty" validate:"omitempty,max=64"` // 拉卡拉分配的银联商户名称
+	TermNo        string `json:"term_no" validate:"required,max=32"`                  // 拉卡拉分配的业务终端号
+	Amount        int64  `json:"amount" validate:"required"`                          // 单位分，整数型字符
 }
