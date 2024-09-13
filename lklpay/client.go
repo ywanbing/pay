@@ -55,6 +55,13 @@ func WithIsProd(isProd bool) Option {
 	}
 }
 
+// WithDev set dev
+func WithDev(dev bool) Option {
+	return func(client *Client) {
+		client.dev = dev
+	}
+}
+
 // WithContext set context
 func WithContext(ctx context.Context) Option {
 	return func(client *Client) {
@@ -104,6 +111,7 @@ type Client struct {
 	log log.Logger      // logger
 
 	isProd      bool                // 是否生产环境
+	dev         bool                // 是否调试模式
 	nonceStrLen int                 // 随机字符串长度,默认12
 	verifyResp  bool                // 是否响应验签
 	verifyHttps bool                // 是否验证https
@@ -171,6 +179,9 @@ func (c *Client) initHttpClient() {
 	cli.SetTLSClientConfig(&tls.Config{
 		InsecureSkipVerify: !c.verifyHttps,
 	})
+	if c.dev {
+		cli.DevMode()
+	}
 	cli.SetLogger(c.log)
 	cli.SetCommonContentType("application/json")
 	c.cli = cli
